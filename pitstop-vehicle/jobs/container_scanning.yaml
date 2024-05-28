@@ -1,0 +1,8 @@
+container_scanning:
+  stage: container_scanning
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+  needs:
+    - job: "build"
+  variables:
+    CS_IMAGE: cloudnative4/pitstop:pitstop-vehicle
