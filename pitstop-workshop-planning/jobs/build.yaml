@@ -10,5 +10,5 @@ build:
   before_script:
     - echo "$DOCKERHUB_ACCESS_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
   script:
-    - docker build -t abarchihiabdessamade/pitstop-vehicle:1.0.0 .
-    - docker push abarchihiabdessamade/pitstop-vehicle:1.0.0
+    - docker build -t abarchihiabdessamade/pitstop-workshop:1.0.0 .
+    - docker push abarchihiabdessamade/pitstop-workshop:1.0.0

@@ -1,0 +1,199 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-scripts
+  namespace: garage
+data:
+  init-database.sql: |
+    CREATE DATABASE IF NOT EXISTS database_production;
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+  namespace: garage
+type: Opaque
+data:
+  PROD_DB_USERNAME: cm9vdA==  # root
+  PROD_DB_PASSWORD: aW5wdDIwMjRTVUQ=  # inpt2024SUD
+  PROD_DB_NAME: ZGF0YWJhc2VfcHJvZHVjdGlvbg==  # database_production
+  PROD_DB_HOSTNAME_CUSTOMER: cGl0c3RvcC1jdXN0b21lci1kYXRhYmFzZQ==  # pitstop-customer-database
+  PROD_DB_HOSTNAME_VEHICLE: cGl0c3RvcC12ZWhpY2xlLWRhdGFiYXNl  # pitstop-vehicle-database
+  PROD_DB_HOSTNAME_WORKSHOP: cGl0c3RvcC13b3Jrc2hvcC1wbGFubmluZy1kYXRhYmFzZQ==  # pitstop-workshop-planning-database
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-customer
+  namespace: garage
+spec:
+  selector:
+    matchLabels:
+      app: mysql-customer
+  serviceName: mysql-customer
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mysql-customer
+    spec:
+      containers:
+      - name: mysql-customer
+        image: mysql:latest
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: PROD_DB_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: PROD_DB_NAME
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+  volumeClaimTemplates:
+  - metadata:
+      name: init-script
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-customer-service
+  namespace: garage
+spec:
+  selector:
+    app: mysql-customer
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  clusterIP: None  # Headless service for StatefulSet
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-vehicle
+  namespace: garage
+spec:
+  selector:
+    matchLabels:
+      app: mysql-vehicle
+  serviceName: mysql-vehicle
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mysql-vehicle
+    spec:
+      containers:
+      - name: mysql-vehicle
+        image: mysql:latest
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: PROD_DB_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: PROD_DB_NAME
+        ports:
+        - containerPort: 3306
+        - containerPort: 3306
+        volumeMounts:
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+  volumeClaimTemplates:
+  - metadata:
+      name: init-script
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-vehicle-service
+  namespace: garage
+spec:
+  selector:
+    app: mysql-vehicle
+  ports:
+    - protocol: TCP
+      port: 3307
+      targetPort: 3306
+  clusterIP: None  # Headless service for StatefulSet
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-workshop
+  namespace: garage
+spec:
+  selector:
+    matchLabels:
+      app: mysql-workshop
+  serviceName: mysql-workshop
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mysql-workshop
+    spec:
+      containers:
+      - name: mysql-workshop
+        image: mysql:latest
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: PROD_DB_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: PROD_DB_NAME
+        ports:
+        - containerPort: 3306
+        - containerPort: 3306
+        volumeMounts:
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+  volumeClaimTemplates:
+  - metadata:
+      name: init-script
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-workshop-service
+  namespace: garage
+spec:
+  selector:
+    app: mysql-workshop
+  ports:
+    - protocol: TCP
+      port: 3308
+      targetPort: 3306
+  clusterIP: None  # Headless service for StatefulSet

@@ -1,0 +1,171 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-deployment
+  namespace: garage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer
+  template:
+    metadata:
+      labels:
+        app: customer
+    spec:
+      containers:
+        - name: customer
+          image: cloudnative4/pitstop:pitstop-customer--
+          ports:
+            - containerPort: 3001
+          env:
+            - name: PROD_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_USERNAME
+            - name: PROD_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_PASSWORD
+            - name: PROD_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_NAME
+            - name: PROD_DB_HOSTNAME_CUSTOMER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_HOSTNAME_CUSTOMER
+            - name: PROD_DB_PORT
+              value: "3306"  # Port MySQL par défaut
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pitstop-customer-service
+  namespace: garage
+spec:
+  selector:
+    app: customer
+  ports:
+    - protocol: TCP
+      port: 3001
+      targetPort: 3001
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pitstop-vehicle-service
+  namespace: garage
+spec:
+  selector:
+    app: vehicle
+  ports:
+    - protocol: TCP
+      port: 3002
+      targetPort: 3002
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehicle-deployment
+  namespace: garage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vehicle
+  template:
+    metadata:
+      labels:
+        app: vehicle
+    spec:
+      containers:
+        - name: vehicle
+          image: cloudnative4/pitstop-vehicle-service:1.0.0
+          ports:
+            - containerPort: 3002
+          env:
+            - name: PROD_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_USERNAME
+            - name: PROD_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_NAME
+            - name: PROD_DB_HOSTNAME_VEHICLE
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_HOSTNAME_VEHICLE
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pitstop-workshop-service
+  namespace: garage
+spec:
+  selector:
+    app: workshop
+  ports:
+    - protocol: TCP
+      port: 3003
+      targetPort: 3003
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workshop-deployment
+  namespace: garage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workshop
+  template:
+    metadata:
+      labels:
+        app: workshop
+    spec:
+      containers:
+        - name: workshop
+          image: cloudnative4/pitstop-workshop-service:1.0.0
+          ports:
+            - containerPort: 3003
+          env:
+            - name: PROD_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_USERNAME
+            - name: PROD_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_PASSWORD
+            - name: PROD_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_NAME
+            - name: PROD_DB_HOSTNAME_WORKSHOP
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PROD_DB_HOSTNAME_WORKSHOP

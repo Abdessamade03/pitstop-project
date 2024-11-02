@@ -1,0 +1,24 @@
+stages:
+  - test
+  - build
+  - container_scanning
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - echo "$DOCKERHUB_ACCESS_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    - docker build -t cloudnative4/pitstop:pitstop-express-gateway .
+    - docker push cloudnative4/pitstop:pitstop-express-gateway
+
+container_scanning:
+  stage: container_scanning
+  variables:
+    CS_IMAGE: cloudnative4/pitstop:pitstop-express-gateway

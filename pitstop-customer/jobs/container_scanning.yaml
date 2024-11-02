@@ -5,4 +5,4 @@ container_scanning:
   needs:
     - job: "build"
   variables:
-    CS_IMAGE: abarchihiabdessamade/pitstop-vehicle:1.0.0
+    CS_IMAGE: abarchihiabdessamade/pitstop-customer:1.0.0

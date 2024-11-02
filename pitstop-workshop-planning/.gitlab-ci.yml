@@ -1,0 +1,17 @@
+stages:
+  - test
+  - build
+  - container_scanning
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - jobs/build.yaml
+  - jobs/container_scanning.yaml
+
+cache:
+  paths:
+    - node_modules/
+    - .docker/
+
